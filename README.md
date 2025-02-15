@@ -1,38 +1,48 @@
-# sv
+# MinaBox
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+#### An open source real-time collaborative widget-based productivity application built with Svelte
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Customizable widget dashboard
+- Multiple widget types for different productivity needs
+- User authentication and personalized workspaces
+- Drag-and-drop interface
+- Cross-device synchronization
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+### Frontend
+- SvelteKit
+- Tailwind CSS
+- shadcn-svelte UI components
 
-## Developing
+### Backend
+- FastAPI (Python)
+- Firebase Firestore
+- Firebase Authentication
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Development Tools
+- Vite
+- ESLint
+- Prettier
 
-```bash
-npm run dev
+## Development Status
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+🚧 Currently in active development 🚧
 
-## Building
+- [x] Project setup
+- [ ] Basic widget framework
+- [ ] User authentication
+- [ ] Real-time synchronization
+- [ ] Widget customization
+- [ ] Collaborative features
+- [ ] Production deployment
 
-To create a production version of your app:
+## Contributing
 
-```bash
-npm run build
-```
+This project is currently in development. Feel free to star the repository to follow its progress!
 
-You can preview the production build with `npm run preview`.
+## License
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+nothing yet ¯\\_(ツ)_/¯

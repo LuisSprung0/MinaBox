@@ -20,7 +20,7 @@
 
 	let mouse = { x: 0, y: 0 };
 	let theme_toggle;
-	let circle_size = tweened(100, { duration: 700, easing: cubicInOut });
+	let circle_size = tweened(0, { duration: 700, easing: cubicInOut });
 	let i_circle_size = 5;
 
 	$: button_rect = theme_toggle?.getBoundingClientRect() || {
@@ -62,7 +62,6 @@
 
 	onMount(() => {
 		browser = true;
-		document.body.style.cursor = 'none';
 
 		const savedMode = getCookie('dark_mode');
 		if (savedMode !== null) {
@@ -92,7 +91,7 @@
 			set_dark_mode_class(mode);
 
 			circle_size.set(0, { duration: 0 });
-			await circle_size.set(100);
+			await circle_size.set(0);
 			transitioning = false;
 		} else {
 			set_dark_mode_class(mode);
@@ -173,25 +172,18 @@
 	></svg
 >
 
-<!-- Creates 2 circles that follows the user's mouse -->
+<!-- Creates a circle that follows the user's mouse -->
 <!-- Inverts the colors of everything behind it -->
 <!-- Second circle acts as a 'crosshair' letting the user see what they select -->
 <div
 	class="pointer-events-none fixed transform rounded-full backdrop-invert backdrop-filter transition-transform scale-150={transitioning}"
 	style={cursor1}
 ></div>
-<div
-	class="pointer-events-none fixed transform rounded-full backdrop-invert backdrop-filter transition-transform scale-150={transitioning}"
-	style={cursor2}
-></div>
 
 <style>
 	@font-face {
 	font-family: 'Darker-Grotesque';
 	src: url('/src/assets/fonts/DarkerGrotesque_V.ttf');
-	}
-	:global(*) {
-		cursor: none;
 	}
 	.theme-icon {
 		position: absolute;

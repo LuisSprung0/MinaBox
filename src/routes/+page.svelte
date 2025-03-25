@@ -172,9 +172,6 @@
 	></svg
 >
 
-<!-- Creates a circle that follows the user's mouse -->
-<!-- Inverts the colors of everything behind it -->
-<!-- Second circle acts as a 'crosshair' letting the user see what they select -->
 <div
 	class="pointer-events-none fixed transform rounded-full backdrop-invert backdrop-filter transition-transform scale-150={transitioning}"
 	style={cursor1}

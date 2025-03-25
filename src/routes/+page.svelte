@@ -21,7 +21,6 @@
 	let mouse = { x: 0, y: 0 };
 	let theme_toggle;
 	let circle_size = tweened(0, { duration: 700, easing: cubicInOut });
-	let i_circle_size = 5;
 
 	$: button_rect = theme_toggle?.getBoundingClientRect() || {
 		left: 0,
@@ -33,7 +32,6 @@
 	$: icon1 = dark_mode ? Moon : Sun;
 	$: icon2 = dark_mode ? Sun : Moon;
 	$: cursor1 = `top: ${mouse.y - $circle_size / 2}px; left: ${mouse.x - $circle_size / 2}px; width: ${$circle_size}px; height: ${$circle_size}px; z-index: ${transitioning ? '5' : '1'};`;
-	$: cursor2 = `top: ${mouse.y - i_circle_size / 2}px; left: ${mouse.x - i_circle_size / 2}px; width: ${i_circle_size}px; height: ${i_circle_size}px; z-index: ${transitioning ? '5' : '1'};`;
 
 	// Cookie functions
 	function setCookie(name, value, days) {

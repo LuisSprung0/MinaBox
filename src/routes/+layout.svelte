@@ -1,6 +1,11 @@
 <script>
 	import '../app.css';
+	import ThemeProvider from '$lib/components/ui/themes/ThemeProvider.svelte';
+
 	let { children } = $props();
 </script>
 
-{@render children()}
+<ThemeProvider>
+	{@render children()}
+</ThemeProvider>
+

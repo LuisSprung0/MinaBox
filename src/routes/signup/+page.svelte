@@ -56,19 +56,13 @@
     <h1 class="text-4xl font-grotesque font-semibold dark:text-white pt-16">Create your account.</h1>
     
     {#if verificationSent}
-      <div class="rounded-md bg-blue-50 p-4 text-center">
-        <h2 class="text-lg font-medium text-blue-800">Verify your email</h2>
-        <p class="mt-2 text-sm text-blue-700">
-          We've sent a verification email to <strong>{email}</strong>. 
-          Please check your inbox and click the link to verify your account.
-        </p>
-        <div class="mt-4">
-          <a href="/login" class="font-medium text-blue-600 hover:text-blue-500">
-            Go to login page
-          </a>
-        </div>
+      <div class="rounded-md bg-black dark:bg-white text-white dark:text-black p-4 text-center mt-8 space-y-3">
+        <h2 class="text-lg font-medium">Verify your email</h2>
+        <p class="text-sm">We've sent a verification email to <b>{email}</b>. Please check your inbox and click the link to verify your account.</p>
+        <div><a href="/login" class="text-lg font-medium">Go to login page</a></div>
       </div>
     {:else}
+
       <form on:submit|preventDefault={handleSignUp} class="mt-8 space-y-6">
         <div class="space-y-4 rounded-md shadow-sm">
           <div>

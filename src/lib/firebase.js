@@ -6,7 +6,7 @@ import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { browser } from "$app/environment";
 import { user, loading } from "$lib/stores/auth";
 
-
+const ALLOWED_EMAIL_DOMAINS = ['ufl.edu'];
 const firebaseConfig = {
   apiKey: "AIzaSyCJAGd9XpqG_ThCfmHbcElAuI6WjeCGx2s",
   authDomain: "mina-box.firebaseapp.com",
@@ -33,6 +33,11 @@ if (browser) {
 
 export const signUp = async (email, password) => {
   try {
+    const emailDomain = email.split('@')[1];
+    if (!ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+      throw new Error(`Email domain not allowed. Only ${ALLOWED_EMAIL_DOMAINS.join(', ')} domains are permitted.`);
+    }
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     console.log("User created:", userCredential.user);
     await sendEmailVerification(userCredential.user);

@@ -23,7 +23,7 @@
         verificationSent = true;
         successMessage = "Account created! Please check your email to verify your account before logging in.";
       } else {
-        errorMessage = "Failed to create account. Email may be in use.";
+        errorMessage = "Failed to create account. Ensure you are using a UF email address.";
       }
     } catch (error) {
       errorMessage = error.message || "An error occurred during signup.";
@@ -104,9 +104,6 @@
             disabled={loading || !formValid}
           >
             {#if loading}
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                <!-- ... loading spinner ... -->
-              </span>
               Creating account...
             {:else}
               Create account

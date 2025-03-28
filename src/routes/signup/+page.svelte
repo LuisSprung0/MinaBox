@@ -1,6 +1,18 @@
 <script>
+  //Images / Icons
+  import full_logo_black from '/src/assets/logos/logo_full_black.svg';
+  import full_logo_white from '/src/assets/logos/logo_full_white.svg';
+
+  //Components
+  import ThemeToggle from '$lib/components/ui/themes/ThemeToggle.svelte';
+  import { Button } from '$lib/components/ui/button';
+
+  //Functions
   import { signUp } from "$lib/firebase";
   import { goto } from "$app/navigation";
+  import { getContext } from 'svelte';
+
+
   
   let email = "";
   let password = "";
@@ -8,7 +20,9 @@
   let successMessage = "";
   let loading = false;
   let verificationSent = false;
+  const { darkMode } = getContext('theme');
 
+  $: logo = $darkMode ? full_logo_white : full_logo_black;
   $: isValidPassword = password.length >= 6;
   $: formValid = email && isValidPassword;
 
@@ -33,12 +47,13 @@
   }
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-  <div class="w-full max-w-md space-y-8">
-    <div class="text-center">
-      <h1 class="text-3xl font-bold tracking-tight text-gray-900">Create your account</h1>
-      <p class="mt-2 text-sm text-gray-600">Join MinaBox to get started</p>
-    </div>
+<div class="flex min-h-screen items-center text-center justify-center bg-white dark:bg-black dark:text-white">
+
+  <ThemeToggle />
+
+  <div class="w-full max-w-md">
+    <a href="/"><img src={logo} alt="MiNABOX Logo" class="w-full" draggable="false" /></a>
+    <h1 class="text-4xl font-grotesque font-semibold dark:text-white pt-16">Create your account.</h1>
     
     {#if verificationSent}
       <div class="rounded-md bg-blue-50 p-4 text-center">
@@ -64,7 +79,7 @@
               bind:value={email} 
               placeholder="Email" 
               required
-              class="relative block w-full rounded-md border-0 p-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600"
+              class="relative block w-full rounded-md border-0 p-2 bg-white dark:bg-black text-black dark:text-white ring-1 ring-inset ring-black dark:ring-white focus:z-10 focus:ring-3 focus:ring-inset"
             />
           </div>
           
@@ -74,9 +89,9 @@
               id="password"
               type="password" 
               bind:value={password} 
-              placeholder="Password (min 6 characters)" 
+              placeholder="Password" 
               required
-              class="relative block w-full rounded-md border-0 p-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600"
+              class="relative block w-full rounded-md border-0 p-2 bg-white dark:bg-black text-black dark:text-white ring-1 ring-inset ring-black dark:ring-white focus:z-10 focus:ring-3 focus:ring-inset"
             />
           </div>
         </div>
@@ -97,26 +112,23 @@
           </div>
         {/if}
 
-        <div>
-          <button
-            type="submit"
-            class="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-70"
-            disabled={loading || !formValid}
-          >
-            {#if loading}
-              Creating account...
-            {:else}
-              Create account
-            {/if}
-          </button>
-        </div>
+      <Button
+        type="submit"
+        class="w-full bg-black text-white dark:bg-white dark:text-black hover:opacity-80 disabled:opacity-70 transition-none"
+        disabled={loading || !email || !password}
+      >
+        {#if loading}
+          Signing in...
+        {:else}
+          Sign in
+        {/if}
+      </Button>
         
-        <div class="text-center">
-          <p class="mt-2 text-sm text-gray-600">
-            Already have an account? 
-            <a href="/login" class="font-medium text-blue-600 hover:text-blue-500">Sign in</a>
-          </p>
-        </div>
+      <p class="mt-2 text-sm text-black dark:text-white">
+        Don't have an account? 
+        <a href="/login" class="font-medium"><b>Sign in</b></a>
+      </p>
+
       </form>
     {/if}
   </div>

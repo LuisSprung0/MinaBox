@@ -112,9 +112,9 @@
         disabled={loading || !email || !password}
       >
         {#if loading}
-          Signing in...
+          Signing up...
         {:else}
-          Sign in
+          Sign up
         {/if}
       </Button>
         

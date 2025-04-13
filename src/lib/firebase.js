@@ -30,6 +30,7 @@ if (browser) {
   });
 }
 
+export { db };
 
 export const signUp = async (email, password) => {
   try {
@@ -44,7 +45,8 @@ export const signUp = async (email, password) => {
     
     const uid = userCredential.user.uid;
     await setDoc(doc(db, "users", uid), {
-      display_name: "",
+      name: "",
+      accent: "",
       boards: []
     });
     console.log("User document created in Firestore");

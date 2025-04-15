@@ -18,18 +18,20 @@
   import { onMount, getContext } from 'svelte';
   import { user, loading, signOut } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
-  import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+  import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
   import { db } from "$lib/firebase";
 	import { browser } from '$app/environment';
 
 
   const { darkMode, toggleTheme } = getContext('theme');
+  
+  const shade = '500';
   const color_names = [
   'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green',
   'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet',
   'purple', 'fuchsia', 'pink', 'rose'
   ];
-  const shade = '500';
+
   let colors = color_names.map(color => ({
     value: color,
     bg: `bg-${color}-${shade}`
@@ -37,8 +39,9 @@
 
   let boards = [];
   let user_id = null;
+  let user_reference;
   $: name = "";
-  $: accent = "stone"; //default while loading user accent
+  $: accent = "";
   $: hover_accent = `hover:border-${accent}-${shade}`
   $: logo = $darkMode ? full_logo_white : full_logo_black;
 
@@ -53,13 +56,10 @@
     }).replace(/\//g, '-');
   }
 
+
   async function fetchUserData(user_id) {
-    if (!user_id || !browser || !db) {
-      goto('/login');
-    }
-  
     try {
-      const user_doc = await getDoc(doc(db, 'users', user_id));
+      const user_doc = await getDoc(user_reference);
       
       if (user_doc.exists()) {
         const user_data = user_doc.data();
@@ -78,6 +78,7 @@
     }
   }
 
+
   async function fetchBoardData(board_ids) {
     try {
       const board_promises = board_ids.map(async (board_id) => {
@@ -94,14 +95,11 @@
         return null;
       });
       
-      // Wait for all board queries to complete
-      const b = await Promise.all(board_promises);
-      
-      // Filter out any null values (boards that don't exist)
+      const b = await Promise.all(board_promises);      
       boards = b.filter(board => board !== null);
+
     } catch (error) {
       console.error("Error fetching board data:", error);
-      boards = [];
     }
   }
 
@@ -110,33 +108,58 @@
     if (!user_id || !browser || !db) return;
     
     try {
-      await updateDoc(doc(db, 'users', user_id), {
+      await updateDoc(user_reference, {
         name,
         accent
       });
-      console.log("User preferences saved successfully");
-    } catch (error) {
-      console.error("Error saving user preferences:", error);
+    } catch (error) { console.error(error); }
+  }
+
+  
+  function openBoard(board_id) {
+    goto(`/board/${board_id}`);
+  }
+
+
+  async function createBoard() {
+  if (!user_id || !browser || !db) return;
+  
+  try {
+    const new_board = doc(collection(db, 'boards'));
+    const snapshot = await getDoc(user_reference);
+    
+    if (snapshot.exists()) {
+      const curr_boards = snapshot.data().boards || [];
+      
+      await updateDoc(user_reference, {
+        boards: [...curr_boards, new_board.id]
+      });
+      
+      await setDoc(new_board, {
+        name: "Untitled Board",
+        created_at: serverTimestamp(),
+        last_modified: serverTimestamp(),
+      });
+      
+      // goto(`/board/${new_board.id}`); commented out until board page ready
     }
-  }
+  } catch (error) { console.error(error); }
+}
 
-
-  function openBoard(boardId) {
-    goto(`/board/${boardId}`);
-  }
 
   onMount(() => {
-    if ($loading === false && !$user) {
-        goto('/login');
-    }
+    // if ($loading === false && !$user) {
+    //   goto('/login');
+    // }
 
     const unsubscribe = user.subscribe(user_data => {
-      if (!user_data) {
+      if (loading === !user_data) {
         goto('/login');
       }
       
       else if (user_data) {
         user_id = user_data.uid;
+        user_reference = doc(db, 'users', user_id);
         fetchUserData(user_data.uid);
       }
     });
@@ -222,7 +245,9 @@
   <h2 class="text-2xl font-semibold my-4">Your Boards</h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
   
-    <Card.Root class="cursor-pointer duration-150 transition-all {hover_accent} border-2 border-dashed pb-20">
+    <Card.Root 
+    class="cursor-pointer duration-150 transition-all {hover_accent} border-2 border-dashed pb-20"
+    onclick={createBoard}>
       <Card.Header>
         <Card.Title>Create New Board</Card.Title>
         <Card.Description>Start organizing a new project</Card.Description>
@@ -237,8 +262,8 @@
   
     {#each boards as board}
     <Card.Root
-      class="cursor-pointer duration-150 transition-all {hover_accent} border-2 pb-20" 
-      on:click={() => openBoard(board.id)}>
+    class="cursor-pointer duration-150 transition-all {hover_accent} border-2 pb-20" 
+    onclick={() => openBoard(board.id)}>
       <Card.Header>
         <Card.Title>{board.title}</Card.Title>
         <Card.Description>Last edited: {board.last}</Card.Description>
@@ -251,5 +276,3 @@
   </div>
   </div>
 </div>
-
-

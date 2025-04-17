@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 export const WIDGET_TYPES = {
   NOTEPAD: 'notepad',
   GENERIC: 'generic',
+  CLOCK: 'clock'
 };
 
 export const widgets = writable([

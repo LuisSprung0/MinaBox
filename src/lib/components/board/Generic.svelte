@@ -8,6 +8,7 @@
 
   // Props with defaults
   export let title = "Widget";
+  export let accent = "white";
   export let width = 400;
   export let height = 300;
   export let x = 100;
@@ -219,7 +220,7 @@
 >
   {#if showHeader && showHeaderNow}
     <div 
-      class="flex items-center justify-between px-3 py-2 border-t-8 border-solid border-purple-500 cursor-move"
+      class="flex items-center justify-between px-3 py-2 border-t-8 border-solid border-{accent}-500 cursor-move"
       role="button"
       tabindex="-1"
       on:mousedown={(e) => startInteraction(e, 'drag')}

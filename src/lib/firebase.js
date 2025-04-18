@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, sendEmailVerification } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
@@ -41,7 +41,6 @@ export const signUp = async (email, password) => {
 
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     console.log("User created:", userCredential.user);
-    await sendEmailVerification(userCredential.user);
     
     const uid = userCredential.user.uid;
     await setDoc(doc(db, "users", uid), {
@@ -58,23 +57,19 @@ export const signUp = async (email, password) => {
   }
 };
 
-export function isEmailVerified(user) {
-  return user?.emailVerified || false;
-}
-
-export async function resendVerificationEmail(user) {
-  if (user) {
-    await sendEmailVerification(user);
-    return true;
-  }
-  return false;
-}
-
 export const logIn = async (email, password) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log("User logged in:", userCredential.user);
-    return userCredential.user;
+    const user_credential = await signInWithEmailAndPassword(auth, email, password);
+    const id_token = await user_credential.user.getIdToken();
+
+    await fetch('/api/sessionLogin', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id_token}),
+  });
+
+    return user_credential.user;
+    
   } catch (error) {
     console.error("Error logging in:", error.message);
     return null;

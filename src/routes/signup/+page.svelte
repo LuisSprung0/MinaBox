@@ -11,15 +11,12 @@
   import { signUp } from "$lib/firebase";
   import { goto } from "$app/navigation";
   import { getContext } from 'svelte';
-
-
   
   let email = "";
   let password = "";
   let errorMessage = "";
   let successMessage = "";
   let loading = false;
-  let verificationSent = false;
   const { darkMode } = getContext('theme');
 
   $: logo = $darkMode ? full_logo_white : full_logo_black;
@@ -33,12 +30,9 @@
     
     try {
       const user = await signUp(email, password);
-      if (user) {
-        verificationSent = true;
-        successMessage = "Account created! Please check your email to verify your account before logging in.";
-      } else {
-        errorMessage = "Failed to create account. Ensure you are using a UF email address.";
-      }
+      if (user) await goto("/profile");
+      
+      errorMessage = "Failed to create account. Ensure you are using a UF email address.";
     } catch (error) {
       errorMessage = error.message || "An error occurred during signup.";
     } finally {
@@ -54,15 +48,6 @@
   <div class="w-full max-w-md">
     <a href="/"><img src={logo} alt="MiNABOX Logo" class="w-full" draggable="false" /></a>
     <h1 class="text-4xl font-grotesque font-semibold dark:text-white pt-16">Create your account.</h1>
-    
-    {#if verificationSent}
-      <div class="rounded-md bg-black dark:bg-white text-white dark:text-black p-4 text-center mt-8 space-y-3">
-        <h2 class="text-lg font-medium">Verify your email</h2>
-        <p class="text-sm">We've sent a verification email to <b>{email}</b>. Please check your inbox and click the link to verify your account.</p>
-        <div><a href="/login" class="text-lg font-medium">Go to login page</a></div>
-      </div>
-    {:else}
-
       <form on:submit|preventDefault={handleSignUp} class="mt-8 space-y-6">
         <div class="space-y-4 rounded-md shadow-sm">
           <div>
@@ -124,6 +109,5 @@
       </p>
 
       </form>
-    {/if}
   </div>
 </div>

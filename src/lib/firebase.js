@@ -50,6 +50,8 @@ export const signUp = async (email, password) => {
     });
     console.log("User document created in Firestore");
     
+    await logIn(email, password); //sign the user in after the account is created
+
     return userCredential.user;
   } catch (error) {
     console.error("Error signing up:", error.message);

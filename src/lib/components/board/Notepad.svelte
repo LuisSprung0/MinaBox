@@ -1,3 +1,19 @@
+<script context="module">
+  import { registerWidget } from '$lib/stores/widget_register';
+  import { PencilLine } from 'lucide-svelte';
+  
+  export const widgetDefinition = {
+    id: 'notepad',
+    name: 'Notepad',
+    description: 'Write down your thoughts or plans',
+    icon: PencilLine,
+  };
+  
+  if (typeof window !== 'undefined') {
+    registerWidget(widgetDefinition);
+  }
+</script>
+
 <script>
   import Generic from './Generic.svelte';
   

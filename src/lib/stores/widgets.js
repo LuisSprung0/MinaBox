@@ -1,28 +1,16 @@
-import { writable } from 'svelte/store';
+import { writable} from 'svelte/store';
 
-export const WIDGET_TYPES = {
-  NOTEPAD: 'notepad',
-  GENERIC: 'generic',
-  CLOCK: 'clock'
-};
+export const widgets = writable([]);
 
-export const widgets = writable([
-  {
-    id: 1,
-    type: WIDGET_TYPES.NOTEPAD,
-    x: 100,
-    y: 100,
-  }
-]);
-
-export function addWidget(type, x, y) {
+export function addWidget(widgetTypeId, x, y) {
   widgets.update(items => {
     const newId = items.length > 0 ? Math.max(...items.map(w => w.id)) + 1 : 1;
     return [...items, {
       id: newId,
-      type,
+      typeId: widgetTypeId,
       x,
       y,
+      content: {} //blank content on creation
     }];
   });
 }

@@ -235,7 +235,7 @@
           </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Content align=end>
-          <div class="flex flex-row gap-4">
+          <div class="flex flex-row gap-4 justify-evenly">
             {#if minimizable}
             <Tooltip.Root>
               <Tooltip.Trigger>

@@ -5,15 +5,14 @@
   //Components
   import { Button } from "$lib/components/ui/button/";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
-
-	import Clock from "$lib/components/board/Clock.svelte";
-  import Generic from "$lib/components/board/Generic.svelte";
-  import Notepad from "$lib/components/board/Notepad.svelte";
+  import WidgetLoader from "$lib/components/board/WidgetLoader.svelte"; //dynamically loads all widgets for us
 
   //Functions
   import { onMount, getContext } from 'svelte';
   import { goto } from "$app/navigation";
-  import { widgets, addWidget, removeWidget, WIDGET_TYPES } from "$lib/stores/widgets.js";
+  import { widgets, addWidget, removeWidget } from "$lib/stores/widgets.js";
+  import { widgetRegistry } from "$lib/stores/widget_register";
+  import { initializeWidgets } from "$lib/widget_init";
 
   const { darkMode, toggleTheme } = getContext('theme');
   const default_spawn = [100, 100];
@@ -22,15 +21,10 @@
     removeWidget(widgetId);
   }
 
-  function handleAddWidget() {
-    addWidget(WIDGET_TYPES.NOTEPAD, 100, 100);
-  }
+  onMount(() => {
+    initializeWidgets();
+  });
 
-  const widgetComponents = {
-    [WIDGET_TYPES.CLOCK]: Clock,
-    [WIDGET_TYPES.NOTEPAD]: Notepad,
-    [WIDGET_TYPES.GENERIC]: Generic, //temp until new widgets added
-  };
 </script>
 
 
@@ -52,28 +46,29 @@
         <DropdownMenu.Content>
           <DropdownMenu.Label>Add Widget</DropdownMenu.Label>
           <DropdownMenu.Separator />
-          <DropdownMenu.Item on:click={() => addWidget(WIDGET_TYPES.CLOCK, default_spawn[0], default_spawn[1])}>
-            Clock
-          </DropdownMenu.Item>
-          <DropdownMenu.Item on:click={() => addWidget(WIDGET_TYPES.NOTEPAD, default_spawn[0], default_spawn[1])}>
-            Notepad
-          </DropdownMenu.Item>
-          <DropdownMenu.Item on:click={() => addWidget(WIDGET_TYPES.GENERIC, default_spawn[0], default_spawn[1])}>
-            Blank
-          </DropdownMenu.Item>
+          {#each Object.values($widgetRegistry) as widget}
+            <DropdownMenu.Item on:click={() => addWidget(widget.id, default_spawn[0], default_spawn[1])}>
+              {#if widget.icon}
+                <svelte:component this={widget.icon} class="mr-2 h-4 w-4" />
+              {/if}
+              {widget.name}
+            </DropdownMenu.Item>
+          {/each}
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     </div>
 
     {#each $widgets as widget (widget.id)}
-      <svelte:component 
-        this={widgetComponents[widget.type]} 
-        x={widget.x}
-        y={widget.y}
-        id={widget.id}
-        content={widget.content}
-        close={() => handleClose(widget.id)}
-      />
+    <WidgetLoader 
+    typeId={widget.typeId} 
+    widgetProps={{
+      x: widget.x,
+      y: widget.y,
+      id: widget.id,
+      content: widget.content,
+      close: () => handleClose(widget.id)
+      }}
+    />
     {/each}
   </div>
 </div>

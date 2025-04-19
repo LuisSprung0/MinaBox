@@ -1,3 +1,19 @@
+<script context="module">
+  import { registerWidget } from '$lib/stores/widget_register';
+  import Clock from 'lucide-svelte/icons/clock';
+  
+  export const widgetDefinition = {
+    id: 'clock',
+    name: 'Clock',
+    description: 'Displays the current time',
+    icon: Clock,
+  };
+  
+  if (typeof window !== 'undefined') {
+    registerWidget(widgetDefinition);
+  }
+</script>
+
 <script>
   import { onMount, onDestroy } from 'svelte';
   import Generic from './Generic.svelte';

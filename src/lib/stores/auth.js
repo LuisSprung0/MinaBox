@@ -31,5 +31,9 @@ export const signOut = async () => {
   if (browser && auth) {
     await auth.signOut();
     user.set(null);
+
+    await fetch('/api/sessionLogout', {
+      method: 'POST',
+    });
   }
 };

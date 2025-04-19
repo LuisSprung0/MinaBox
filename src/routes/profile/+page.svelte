@@ -148,16 +148,8 @@
 
 
   onMount(() => {
-    // if ($loading === false && !$user) {
-    //   goto('/login');
-    // }
-
     const unsubscribe = user.subscribe(user_data => {
-      if (loading === !user_data) {
-        goto('/login');
-      }
-      
-      else if (user_data) {
+      if (user_data) {
         user_id = user_data.uid;
         user_reference = doc(db, 'users', user_id);
         fetchUserData(user_data.uid);

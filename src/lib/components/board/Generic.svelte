@@ -5,6 +5,7 @@
   import { Button } from "$lib/components/ui/button/";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index";
   import * as Tooltip from "$lib/components/ui/tooltip";
+  import { updateWidget } from '$lib/services/widgetService';
 
   // Props with defaults
   export let title = "Widget";
@@ -22,6 +23,9 @@
   export let closable = true;
   export let snapDistance = 10;
   export let close = () => {};
+  export let id = undefined;
+  export let boardId = undefined;  // Add boardId prop to identify which board this widget belongs to
+  export let content = {};
 
   // State variables
   let isDragging = false;
@@ -87,29 +91,32 @@
     };
   }
 
-  function startInteraction(e, type, direction = '') {
-    if (isMaximized || (type === 'resize' && !resizable)) return;
+  function startInteraction(e, type, dir = '') {
+    e.preventDefault();
     
-    isDragging = type === 'drag';
-    isResizing = type === 'resize';
-    resizeDirection = direction;
-    dragStart = { 
-      x: e.clientX || e.touches?.[0].clientX, 
-      y: e.clientY || e.touches?.[0].clientY 
-    };
+    if (isMaximized) return;
+    
+    const clientX = e.clientX || e.touches?.[0].clientX;
+    const clientY = e.clientY || e.touches?.[0].clientY;
+    
+    dragStart = { x: clientX, y: clientY };
     startDimensions = { width, height, x, y };
-    isFocused = true;
+    
+    if (type === 'drag') {
+      isDragging = true;
+    } else if (type === 'resize') {
+      isResizing = true;
+      resizeDirection = dir;
+    }
     
     document.addEventListener('mousemove', handleInteraction);
-    document.addEventListener('touchmove', handleInteraction);
+    document.addEventListener('touchmove', handleInteraction, { passive: false });
     document.addEventListener('mouseup', stopInteraction);
     document.addEventListener('touchend', stopInteraction);
-    
-    e.preventDefault();
   }
 
   function handleInteraction(e) {
-    if (!isDragging && !isResizing) return;
+    e.preventDefault();
     
     const clientX = e.clientX || e.touches?.[0].clientX;
     const clientY = e.clientY || e.touches?.[0].clientY;
@@ -131,6 +138,10 @@
     x = newX < snapDistance ? 0 : (newX + width > containerWidth - snapDistance ? containerWidth - width : newX);
     y = newY < snapDistance ? 0 : (newY + height > containerHeight - snapDistance ? containerHeight - height : newY);
     
+    if (id && boardId) {
+      updateWidget(boardId, id, { x, y });
+    }
+
     dispatch('move', { x, y });
   }
 
@@ -163,6 +174,10 @@
         height = startDimensions.height - (y - startDimensions.y);
       }
     }
+
+    if (id && boardId) {
+      updateWidget(boardId, id, { width, height, x, y });
+    }
     
     dispatch('resize', { width, height, x, y });
   }
@@ -192,12 +207,36 @@
       isMaximized = true;
       snapped = { left: true, right: true, top: true, bottom: true };
     }
+    
+    if (id && boardId) {
+      updateWidget(boardId, id, { 
+        width, height, x, y, 
+        metadata: { isMaximized } 
+      });
+    }
+    
     dispatch('maximize', { isMaximized });
   }
 
   function minimize() {
     isMinimized = !isMinimized;
+    
+    if (id && boardId) {
+      updateWidget(boardId, id, { 
+        metadata: { isMinimized } 
+      });
+    }
+    
     dispatch('minimize', { isMinimized });
+  }
+  
+  // Method to update widget content - can be called from child widgets
+  export function updateContent(newContent) {
+    content = { ...content, ...newContent };
+    
+    if (id && boardId) {
+      updateWidget(boardId, id, { content });
+    }
   }
 </script>
 

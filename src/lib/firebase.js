@@ -44,8 +44,8 @@ export const signUp = async (email, password) => {
     
     const uid = userCredential.user.uid;
     await setDoc(doc(db, "users", uid), {
-      name: "",
-      accent: "",
+      name: "New User",
+      accent: "stone",
       boards: []
     });
     console.log("User document created in Firestore");

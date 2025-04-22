@@ -24,8 +24,9 @@
   export let snapDistance = 10;
   export let close = () => {};
   export let id = undefined;
-  export let boardId = undefined;  // Add boardId prop to identify which board this widget belongs to
+  export let boardId = undefined;
   export let content = {};
+  export let settings = {};
 
   // State variables
   let isDragging = false;
@@ -230,12 +231,19 @@
     dispatch('minimize', { isMinimized });
   }
   
-  // Method to update widget content - can be called from child widgets
   export function updateContent(newContent) {
     content = { ...content, ...newContent };
     
     if (id && boardId) {
       updateWidget(boardId, id, { content });
+    }
+  }
+
+  export function updateSettings(newSettings) {
+    settings = { ...settings, ...newSettings };
+    
+    if (id && boardId) {
+      updateWidget(boardId, id, { settings });
     }
   }
 </script>

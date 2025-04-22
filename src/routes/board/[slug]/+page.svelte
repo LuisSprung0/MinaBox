@@ -1,6 +1,6 @@
 <script>
   //Images / Icons
-  import { CornerDownLeft, Plus } from "lucide-svelte";
+  import { CornerDownLeft, Plus, Pencil } from "lucide-svelte";
 
   //Components
   import { Button } from "$lib/components/ui/button/";
@@ -24,7 +24,7 @@
   const { darkMode, toggleTheme } = getContext('theme');
   const default_spawn = [100, 100];
 
-  let accent; // Default accent color
+  let accent;
   let boardRef;
   let userRef;
   let unsubscribeBoard;
@@ -32,7 +32,10 @@
   let boardTitle = "Loading...";
   let isLoading = true;
   
-  // Load board data and setup real-time sync
+  // New variables for title editing
+  let isEditingTitle = false;
+  let editedTitle = "";
+  
   onMount(async () => {
     initializeWidgets();
     
@@ -40,7 +43,6 @@
     userRef = doc(db, 'users', user_id);
     
     try {
-      // Get initial board data
       const boardDoc = await getDoc(boardRef);
       
       if (!boardDoc.exists()) {
@@ -51,17 +53,13 @@
       const boardData = boardDoc.data();
       boardTitle = boardData.name || "Untitled Board";
       
-      // Load widgets using our service
       await loadBoardWidgets(board_id);
       
-      // Set up real-time listening for board changes
       unsubscribeBoard = onSnapshot(boardRef, (doc) => {
         if (doc.exists()) {
           const data = doc.data();
           boardTitle = data.name || "Untitled Board";
-          
-          // We handle widget updates through our service now,
-          // but we still need to listen for changes from other clients
+
           if (data.widgets) {
             const dbWidgets = data.widgets.map(w => ({
               id: w.id,
@@ -71,11 +69,10 @@
               width: w.width || 400,
               height: w.height || 300,
               content: w.content || {},
+              settings: w.settings || {},
               metadata: w.metadata || {}
             }));
             
-            // Compare with current widgets and only update if different
-            // This prevents infinite loops with our own updates
             const currentWidgetsJson = JSON.stringify($widgets);
             const dbWidgetsJson = JSON.stringify(dbWidgets);
             
@@ -132,18 +129,73 @@
   async function handleClose(widgetId) {
     await removeWidget(board_id, widgetId);
   }
+
+  // New function to handle title editing
+  function startEditingTitle() {
+    editedTitle = boardTitle;
+    isEditingTitle = true;
+    setTimeout(() => document.getElementById('title-input')?.focus(), 0);
+  }
+
+  // New function to save the edited title
+  async function saveTitle() {
+    if (editedTitle.trim() === "") return;
+    
+    try {
+      await updateDoc(boardRef, {
+        name: editedTitle.trim(),
+        last_modified: serverTimestamp()
+      });
+      
+      boardTitle = editedTitle.trim();
+      isEditingTitle = false;
+    } catch (error) {
+      console.error("Error updating board title:", error);
+    }
+  }
+
+  // New function to cancel editing
+  function cancelEditingTitle() {
+    isEditingTitle = false;
+  }
+
+  // Handle keyboard events for the title input
+  function handleTitleKeydown(e) {
+    if (e.key === 'Enter') {
+      saveTitle();
+    } else if (e.key === 'Escape') {
+      cancelEditingTitle();
+    }
+  }
 </script>
 
 <div class="glow" style="--accent-color: {accent}">
   <div class="stippled">
-    <div class="absolute z-10 top-4 left-4">
+    <div class="absolute z-10 top-4 left-4 flex items-center gap-3">
       <Button variant="ghost" size="icon" class="bg-none" on:click={() => goto("/profile")}>
         <CornerDownLeft />
       </Button>
-    </div>
-
-    <div class="absolute z-10 top-4 left-16">
-      <h1 class="text-xl font-medium text-foreground">{boardTitle}</h1>
+      
+      {#if isEditingTitle}
+        <div class="flex items-center">
+          <input 
+            id="title-input"
+            type="text" 
+            bind:value={editedTitle}
+            on:keydown={handleTitleKeydown}
+            on:blur={saveTitle}
+            class="text-xl font-medium text-foreground bg-transparent border-b border-primary outline-none px-1"
+          />
+        </div>
+      {:else}
+        <div 
+          class="flex items-center cursor-pointer group" 
+          on:click={startEditingTitle}
+        >
+          <h1 class="text-xl font-medium text-foreground">{boardTitle}</h1>
+          <Pencil class="h-4 w-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </div>
+      {/if}
     </div>
   
     <div class="absolute z-10 bottom-4 left-4">
@@ -184,6 +236,7 @@
           id: widget.id,
           boardId: board_id,
           content: widget.content,
+          settings: widget.settings || {},
           close: () => handleClose(widget.id),
           accent: accent,
           isMaximized: widget.metadata?.isMaximized || false,

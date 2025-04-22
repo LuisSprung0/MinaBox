@@ -1,12 +1,158 @@
 <script>
-  import { onMount } from 'svelte';
+  //Images / Icons
+  import full_logo_black from '/src/assets/logos/logo_full_black.svg';
+  import full_logo_white from '/src/assets/logos/logo_full_white.svg';
+  import { CircleUserRound } from "lucide-svelte";
+
+  //Components
+  import { Button } from "$lib/components/ui/button";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
+  import { Skeleton } from '$lib/components/ui/skeleton';
+  import * as Card from "$lib/components/ui/card";
+  import * as Dialog from "$lib/components/ui/dialog";
+  import * as RadioGroup from "$lib/components/ui/radio-group";
+  import * as Switch from "$lib/components/ui/switch";
+
+  //Functions
+  import { onMount, getContext } from 'svelte';
   import { user, loading, signOut } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
+  import { doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+  import { db } from "$lib/firebase";
+	import { browser } from '$app/environment';
+
+
+  const { darkMode, toggleTheme } = getContext('theme');
+  
+  const shade = '500';
+  const color_names = [
+  'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green',
+  'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet',
+  'purple', 'fuchsia', 'pink', 'rose'
+  ];
+
+  let colors = color_names.map(color => ({
+    value: color,
+    bg: `bg-${color}-${shade}`
+    }));
+
+  let boards = [];
+  let user_id = null;
+  let user_reference;
+  $: name = "";
+  $: accent = "";
+  $: hover_accent = `hover:border-${accent}-${shade}`
+  $: logo = $darkMode ? full_logo_white : full_logo_black;
+
+
+  function formatDate(timestamp) {
+    if (!timestamp) return 'Unknown';
+    
+    return timestamp.toDate().toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit'
+    }).replace(/\//g, '-');
+  }
+
+
+  async function fetchUserData(user_id) {
+    try {
+      const user_doc = await getDoc(user_reference);
+      
+      if (user_doc.exists()) {
+        const user_data = user_doc.data();
+        name = user_data.name;
+        accent = user_data.accent;
+        const board_ids = user_data.boards || [];
+        
+        if (board_ids.length > 0)
+        {
+          await fetchBoardData(board_ids);
+        }
+
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }
+
+
+  async function fetchBoardData(board_ids) {
+    try {
+      const board_promises = board_ids.map(async (board_id) => {
+        const board_doc = await getDoc(doc(db, 'boards', board_id));
+        
+        if (board_doc.exists()) {
+          const board_data = board_doc.data();
+          return {
+            id: board_id,
+            title: board_data.name,
+            last: formatDate(board_data.last_modified)
+          };
+        }
+        return null;
+      });
+      
+      const b = await Promise.all(board_promises);      
+      boards = b.filter(board => board !== null);
+
+    } catch (error) {
+      console.error("Error fetching board data:", error);
+    }
+  }
+
+
+  async function saveUserPreferences() {
+    if (!user_id || !browser || !db) return;
+    
+    try {
+      await updateDoc(user_reference, {
+        name,
+        accent
+      });
+    } catch (error) { console.error(error); }
+  }
+
+  
+  function openBoard(board_id) {
+    goto(`/board/${board_id}`);
+  }
+
+
+  async function createBoard() {
+  if (!user_id || !browser || !db) return;
+  
+  try {
+    const new_board = doc(collection(db, 'boards'));
+    const snapshot = await getDoc(user_reference);
+    
+    if (snapshot.exists()) {
+      const curr_boards = snapshot.data().boards || [];
+      
+      await updateDoc(user_reference, {
+        boards: [...curr_boards, new_board.id]
+      });
+      
+      await setDoc(new_board, {
+        name: "Untitled Board",
+        created_at: serverTimestamp(),
+        last_modified: serverTimestamp(),
+      });
+      
+      // goto(`/board/${new_board.id}`); commented out until board page ready
+    }
+  } catch (error) { console.error(error); }
+}
+
 
   onMount(() => {
-    const unsubscribe = user.subscribe(userData => {
-      if ($loading === false && !userData) {
-        goto('/');
+    const unsubscribe = user.subscribe(user_data => {
+      if (user_data) {
+        user_id = user_data.uid;
+        user_reference = doc(db, 'users', user_id);
+        fetchUserData(user_data.uid);
       }
     });
     
@@ -14,61 +160,111 @@
   });
 </script>
 
-<div class="profile-container">
-  {#if $loading}
-    <p>Loading...</p>
-  {:else if $user}
-    <h1>Profile Page</h1>
-    <div class="user-info text-black">
-      <h2>User Info</h2>
-      <p><strong>Email:</strong> {$user.email}</p>
-      <p><strong>User ID:</strong> {$user.uid}</p>
-      <p><strong>Email Verified:</strong> {$user.emailVerified ? 'Yes' : 'No'}</p>
-    </div>
-    <button on:click={() => {
-      signOut();
-      goto('/login');
+<div class="max-w-7xl mx-auto p-8">
+
+  <div class="flex justify-between mb-20">
+    <img src={logo} alt="MiNABOX Logo" class="w-72" draggable="false" />
+
+    <Dialog.Root onOpenChange={(open) => {
+      if (!open) {
+        saveUserPreferences();
+      }
     }}>
-      Sign Out
-    </button>
+      <Dialog.Trigger> <!-- button to access the menu -->
+        <Button variant="ghost" size="icon"><CircleUserRound /></Button>
+      </Dialog.Trigger>
+
+      <Dialog.Content>
+        
+        <Dialog.Header>
+          <Dialog.Title>Preferences</Dialog.Title>
+          <Dialog.Description>Make MiNABOX feel like its yours.</Dialog.Description>
+        </Dialog.Header>
+
+        <!-- name input -->
+        <div class="space-y-2">
+          <Label for="name">Name</Label>
+          <Input id="name" bind:value={name} placeholder="What should we call you?" />
+        </div>
+
+        <!-- accent color selector -->
+        <div class="space-y-3">
+          <Label>Accent Color</Label>
+          <RadioGroup.Root value={accent} onValueChange={(value) => accent = value}>
+            <div class="flex flex-wrap gap-4">
+              {#each colors as color}
+                <RadioGroup.Item 
+                value={color.value} 
+                class="{color.bg} border-none relative w-6 h-6 rounded-full"
+                >
+                <div class="absolute inset-[3px] rounded-full border-2 border-white opacity-0 data-[state=checked]:opacity-100 transition-opacity"></div>
+                </RadioGroup.Item>
+              {/each}
+            </div>
+          </RadioGroup.Root>
+        </div>
+
+        <!-- dark mode toggle -->
+        <div class="space-y-3 pt-4">
+          <div class="flex items-center justify-between">
+            <Label for="dark-mode" class="flex items-center gap-2">Dark Mode</Label>
+            <Switch.Root id="dark-mode" checked={$darkMode} onCheckedChange={toggleTheme}/>
+          </div>
+        </div>
+
+        <!-- sign out button -->
+        <div class="flex justify-between pt-4">
+          <Button type="button" variant="outline" class="text-red-600 border-2 border-red-600"
+            on:click={() => {
+              signOut();
+              goto('/login');
+            }}>
+            Sign Out
+          </Button>
+        </div>
+
+      </Dialog.Content>
+    </Dialog.Root>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <h2 class="text-4xl font-semibold m-0 mb-4">Welcome, {name}.</h2>
+  </div>
+
+  <div>
+
+  <!-- create new board card will always be rendered no matter what -->
+  <h2 class="text-2xl font-semibold my-4">Your Boards</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
+  
+    <Card.Root 
+    class="cursor-pointer duration-150 transition-all {hover_accent} border-2 border-dashed pb-20"
+    onclick={createBoard}>
+      <Card.Header>
+        <Card.Title>Create New Board</Card.Title>
+        <Card.Description>Start organizing a new project</Card.Description>
+      </Card.Header>
+    </Card.Root>
+
+  {#if $loading}
+
+    <Skeleton />
+
+  {:else if $user} 
+  
+    {#each boards as board}
+    <Card.Root
+    class="cursor-pointer duration-150 transition-all {hover_accent} border-2 pb-20" 
+    onclick={() => openBoard(board.id)}>
+      <Card.Header>
+        <Card.Title>{board.title}</Card.Title>
+        <Card.Description>Last edited: {board.last}</Card.Description>
+      </Card.Header>
+    </Card.Root>
+    {/each}
+
   {/if}
+  
+  </div>
+  </div>
 </div>
-
-<style>
-  .profile-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-
-  .user-info {
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  button {
-    background-color: #e53e3e;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-
-  button:hover {
-    background-color: #c53030;
-  }
-</style>

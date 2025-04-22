@@ -89,6 +89,7 @@
           return {
             id: board_id,
             title: board_data.name,
+            last_modified: board_data.last_modified,
             last: formatDate(board_data.last_modified)
           };
         }
@@ -96,7 +97,12 @@
       });
       
       const b = await Promise.all(board_promises);      
-      boards = b.filter(board => board !== null);
+      boards = b.filter(board => board !== null)
+                .sort((a, b) => {
+                  if (!a.last_modified) return 1;
+                  if (!b.last_modified) return -1;
+                  return b.last_modified.toMillis() - a.last_modified.toMillis();
+                });
 
     } catch (error) {
       console.error("Error fetching board data:", error);
@@ -141,7 +147,7 @@
         last_modified: serverTimestamp(),
       });
       
-      // goto(`/board/${new_board.id}`); commented out until board page ready
+      goto(`/board/${new_board.id}`);
     }
   } catch (error) { console.error(error); }
 }

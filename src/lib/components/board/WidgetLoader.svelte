@@ -3,12 +3,14 @@
   import { widgetRegistry, getWidgetComponent, registerWidgetComponent } from '$lib/stores/widget_register';
   import Clock from './Clock.svelte';  
   import Notepad from './Notepad.svelte';
+  import ToDo from './ToDo.svelte';
   
   export let typeId;
   export let widgetProps;
   
   registerWidgetComponent('clock', Clock);
   registerWidgetComponent('notepad', Notepad);
+  registerWidgetComponent('list-todo', ToDo);
   
   $: component = getWidgetComponent(typeId);
   $: widgetMetadata = $widgetRegistry[typeId];

@@ -59,7 +59,7 @@
       <textarea 
         bind:value={content.text}
         class="w-full h-full resize-none bg-transparent border-none focus:outline-none focus:ring-0 overflow-y-auto box-border font-[inherit]"
-        placeholder="Start typing..."
+        placeholder="Add new items here."
         on:input={handleInput}
       ></textarea>
     </div>
